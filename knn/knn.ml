@@ -31,12 +31,17 @@ let read_header pkt =
 ;;
 
 let read_labels bits =
-  let rec loop acc bits = (* TODO: rewrite not as a loop, and raise error on malformed input *)
+  let parse_one_label bits =
       bitmatch bits with
       | { label : 8;
           rest  : -1 : bitstring
-        } -> loop (label::acc) rest
-      | { _ } -> acc in
+        } -> Some label, rest
+      | { _ } -> None, empty_bitstring in
+  let rec loop acc bits =
+    let label, remainder = parse_one_label bits in
+    match label with
+    | Some l -> loop (l :: acc) remainder
+    | None -> acc in
   List.rev (loop [] bits)
 ;;
 

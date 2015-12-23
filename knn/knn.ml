@@ -1,15 +1,19 @@
-(* Using the K nearest neighbour algorithm to classify handwritten digits in the MNIST database. *)
+(* Use the K nearest neighbour algorithm to classify handwritten digits in the MNIST database.
 
-(* To run from toplevel:
+  1. Save the MNIST database files locally:
 
-utop[1]> #camlp4o;;                                                                                               
-utop[2]> #require "bitstring";;                                                                                   utop[3]> open Bitstring;;        
-utop[4]> #require "bitstring.syntax";;                                                                            
+   http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
+   http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
+   http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
+   http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
+
+   (see http://yann.lecun.com/exdb/mnist/)
+
+  2. To run from toplevel:
+
+   utop[1]> #camlp4o;;                                                                                               utop[2]> #require "bitstring";;                                                                                   utop[3]> open Bitstring;;        
+   utop[4]> #require "bitstring.syntax";;                                                                            
 *)
-
-(* 1. Load the MNIST data (http://yann.lecun.com/exdb/mnist/) into some list. *)
-
-(* a. Training set label file *)
 
 open Bitstring;;
 open Printf;;
@@ -27,47 +31,42 @@ let read_header pkt =
 ;;
 
 let read_labels bits =
-  let rec loop acc bits =
-    (*    let label, rest =  *)
+  let rec loop acc bits = (* TODO: rewrite not as a loop, and raise error on malformed input *)
       bitmatch bits with
       | { label : 8;
           rest  : -1 : bitstring
         } -> loop (label::acc) rest
       | { _ } -> acc in
-
-        (* Bitstring.hexdump_bitstring stdout bits;failwith "Failed to parse labels" in*)
-          (*    loop (label :: acc) rest in  *)
-  loop [] bits
+  List.rev (loop [] bits)
 ;;
 
 (* Write a fn that doesn't use a loop, and reads the number of known records. *)
 
+let base_dir = "/Users/guy/repos/ml/mnist/";;
+let training_labels_filename = base_dir ^ "train-labels-idx1-ubyte";;
+let training_images_filename = base_dir ^ "train-images-idx3-ubyte";;
+let test_labels_filename = base_dir ^ "t10k-labels-idx1-ubyte";;
+let test_images_filename = base_dir ^ "t10k-images-idx3-ubyte";;
 
-
-let readdata =
-
-  let training_labels_filename = "/Users/guy/repos/ml/mnist/t10k-labels-idx1-ubyte" in
-  
-  let pkt = Bitstring.bitstring_of_file training_labels_filename in
-
-  let data_type, num_dims, num_dim1_items, rest = read_header pkt in
-
-  (*  printf "%d\n%li\n" num_dims num_dim1_items in  *)
-
-  let labels = read_labels rest in
-  labels
-  (* List.iter (fun x -> printf "%d\n" x) labels;; *)
-
-
-
-  (* print_endline ""*)
-
-  (*
-  Bitstring.hexdump_bitstring stdout rest *)
+let get_labels filename = 
+  let bits = Bitstring.bitstring_of_file filename in
+  let data_type, num_dims, num_dim1_items, rest = read_header bits in
+  read_labels rest
 ;;
 
+let get_training_labels =
+  get_labels training_labels_filename
+;;
 
+let get_test_labels =
+  get_labels test_labels_filename
+;;
 
+let get_training_images =
+  let bits = Bitstring.bistring_of_file training_images_filename in
+  let blah, rest = read_images_header bits in
+  read_images rest
+;;
 
 
 (*

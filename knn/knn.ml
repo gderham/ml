@@ -9,11 +9,16 @@
 
    (see http://yann.lecun.com/exdb/mnist/)
 
-  2. To run from toplevel:
+  2. To run from toplevel run these first:
 
-   utop[1]> #camlp4o;;                                                                                               utop[2]> #require "bitstring";;                                                                                   utop[3]> open Bitstring;;        
-   utop[4]> #require "bitstring.syntax";;                                                                            
+   utop[1]> #camlp4o;;
+   utop[2]> #require "bitstring";;                                                                                
+   utop[3]> #require "bitstring.syntax";;                                             
 *)
+
+#camlp4o;;
+#require "bitstring";;                                                                         
+#require "bitstring.syntax";;
 
 open Bitstring;;
 open Printf;;
@@ -45,8 +50,27 @@ let read_labels bits =
   List.rev (loop [] bits)
 ;;
 
-(* Write a fn that doesn't use a loop, and reads the number of known records. *)
+let read_magic_number bits =
+  bitmatch bits with
+  | { 0               : 16; (* no meaning *) 
+      data_type       : 8;  (* 0x08 = unsigned byte, 09 = signed byte, 0B = short, 0C = int, 0D = float, 0E = double *)
+      num_dims        : 8;  (* number of dimensions (1=vector, 2=matrix etc) *)
+      rest            : -1 : bitstring (* the image data *)
+    } -> data_type, num_dims, (*dim_sizes,*) rest
+  | { _ } -> failwith "Failed to parse header."
+;;
 
+let read_images_header bits =
+  bitmatch bits with
+  | { num_images : 32;
+      num_rows   : 32;    
+      num_cols   : 32;
+      rest       : -1 : bitstring
+    } -> num_images, num_rows, num_cols, rest
+  | { _ } -> failwith "Failed to parse header"
+;;}
+
+      
 let base_dir = "/Users/guy/repos/ml/mnist/";;
 let training_labels_filename = base_dir ^ "train-labels-idx1-ubyte";;
 let training_images_filename = base_dir ^ "train-images-idx3-ubyte";;
@@ -68,9 +92,16 @@ let get_test_labels =
 ;;
 
 let get_training_images =
-  let bits = Bitstring.bistring_of_file training_images_filename in
-  let blah, rest = read_images_header bits in
-  read_images rest
+  let bits = Bitstring.bitstring_of_file training_images_filename in
+  let data_type, num_dims, rest = read_magic_number bits in
+  let num_images, num_rows, num_cols, rest = read_images_header rest in
+  num_images, num_rows, num_cols
+;;
+
+
+  
+  data_type, num_dims (* dim_sizes *)
+  (* read_images rest*)
 ;;
 
 

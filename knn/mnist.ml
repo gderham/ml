@@ -56,31 +56,26 @@ let read_images_header bits =
   | { _ } -> failwith "Failed to parse header"
 
 let parse_pixmap_into_list bits =
-
   let parse_next_pixel bits =
     bitmatch bits with
     | { pixel : 8;
         rest  : -1 : bitstring
       } -> pixel, rest
     | { _ } -> failwith "Failed to parse pixmap" in
-
   let rec loop acc_pixels pix_num bits =
     if pix_num = 0 then
       acc_pixels
     else
       let pixel, rest = parse_next_pixel bits in
       loop (pixel :: acc_pixels) (pix_num-1) rest in
-
   List.rev (loop [] pixmap_num_pixels bits)
 
-let read_images bits num_images = (* Read images into a list of float list where each int list is 24x24 pixel densities. *)
-
-  let read_image bits = (* parse one 24 x 24 pixmap from the binary data *)
+let read_images bits num_images =
+  let read_image bits =
     bitmatch bits with
     | { pixmap  : 8 * pixmap_num_pixels : bitstring;
         rest   : -1 : bitstring} -> pixmap, rest
     | { _ } -> failwith "Failed to parse images" in
-
   let rec loop acc_images num_images bits =
     if num_images = 0 then
       acc_images
@@ -89,7 +84,6 @@ let read_images bits num_images = (* Read images into a list of float list where
       let row = parse_pixmap_into_list pixmap in
       let matrix = Matrix.list_to_matrix row pixmap_width in
       loop (matrix :: acc_images) (num_images-1) rest in
-
   List.rev (loop [] num_images bits)
 
 let get_labels filename = 

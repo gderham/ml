@@ -7,15 +7,7 @@ open Bitstring;;
 
 (* MNIST handwritten digit database file parsing
 
-  1. Save the MNIST database files locally:
-
-   http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
-   http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
-   http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
-   http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
-
    (see http://yann.lecun.com/exdb/mnist/)
-
 *)
 
 let pixmap_width, pixmap_height = 28,28;;

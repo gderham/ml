@@ -1,6 +1,15 @@
 (* Use the K nearest neighbour algorithm to classify handwritten digits in the MNIST database.
 
-   To compile: ocamlfind ocamlc -linkpkg -thread -syntax camlp4o -package bitstring.syntax -package bitstring,graphics matrix.ml mnist.ml display.ml knn.ml
+  1. Save the MNIST database files locally:
+
+   http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
+   http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
+   http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
+   http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
+
+  2. To compile:
+
+   ocamlfind ocamlc -linkpkg -thread -syntax camlp4o -package bitstring.syntax -package bitstring,graphics matrix.ml mnist.ml display.ml knn.ml
 
 *)
 

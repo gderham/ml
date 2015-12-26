@@ -24,10 +24,14 @@ open Bitstring;;
 open Printf;;
 
 
-let read_header pkt =
+let pixmap_width, pixmap_height = 28,28;;
+let pixmap_num_pixels = pixmap_width * pixmap_height;;
+
+
+let read_labels_header pkt =
   bitmatch pkt with
-  | { 0               : 16; (* no meaning *) 
-      data_type       : 8;  (* 0x08 = unsigned byte, 09 = signed byte, 0B = short, 0C = int, 0D = float, 0E = double *)
+  | { 0               : 16; (* Blank. *) 
+      data_type       : 8;  (* 0x08 = unsigned byte *)
       num_dims        : 8;  (* number of dimensions (1=vector, 2=matrix etc) *)
       num_dim1_items  : 32; (* length of dimension 1 *)
       rest            : -1 : bitstring (* the list of labels *)
@@ -68,9 +72,62 @@ let read_images_header bits =
       rest       : -1 : bitstring
     } -> num_images, num_rows, num_cols, rest
   | { _ } -> failwith "Failed to parse header"
-;;}
+;;
 
-      
+let parse_pixmap_into_list bits =
+
+  let parse_next_pixel bits =
+    bitmatch bits with
+    | { pixel : 8;
+        rest  : -1 : bitstring
+      } -> pixel, rest
+    | { _ } -> failwith "Failed to parse pixmap" in
+
+  let rec loop acc_pixels pix_num bits =
+    if pix_num = 0 then
+      acc_pixels
+    else
+      let pixel, rest = parse_next_pixel bits in
+      loop (pixel :: acc_pixels) (pix_num-1) rest in
+
+  List.rev (loop [] pixmap_num_pixels bits)
+;;
+
+let list_to_matrix list num_cols = (* convert 1xw list to mxn matrix where m*n=w *)
+  if List.length list mod num_cols <> 0 then
+    failwith "num_cols must divide the size of list."
+  else 
+    let rec aux acc_matrix curr_row i = function
+      | [] -> acc_matrix
+      | h :: t ->
+        let new_row = h :: curr_row in
+        if i mod num_cols = 0 then aux (List.rev new_row :: acc_matrix) []      (i+1) t
+        else                       aux acc_matrix                       new_row (i+1) t  in
+    List.rev (aux [] [] 1 list)
+;; 
+  
+
+let read_images bits num_images = (* Read images into a list of float list where each int list is 24x24 pixel densities. *)
+
+  let read_image bits = (* parse one 24 x 24 pixmap from the binary data *)
+    bitmatch bits with
+    | { pixmap  : 8 * pixmap_num_pixels : bitstring;
+        rest   : -1 : bitstring} -> pixmap, rest
+    | { _ } -> failwith "Failed to parse images" in
+
+  let rec loop acc_images num_images bits =
+    if num_images = 0 then
+      acc_images
+    else
+      let pixmap, rest = read_image bits in
+      let row = parse_pixmap_into_list pixmap in
+      let matrix = list_to_matrix row pixmap_width in
+      loop (matrix :: acc_images) (num_images-1) rest in
+
+  List.rev (loop [] num_images bits)
+;;
+
+
 let base_dir = "/Users/guy/repos/ml/mnist/";;
 let training_labels_filename = base_dir ^ "train-labels-idx1-ubyte";;
 let training_images_filename = base_dir ^ "train-images-idx3-ubyte";;
@@ -79,7 +136,7 @@ let test_images_filename = base_dir ^ "t10k-images-idx3-ubyte";;
 
 let get_labels filename = 
   let bits = Bitstring.bitstring_of_file filename in
-  let data_type, num_dims, num_dim1_items, rest = read_header bits in
+  let data_type, num_dims, num_dim1_items, rest = read_labels_header bits in
   read_labels rest
 ;;
 
@@ -95,13 +152,35 @@ let get_training_images =
   let bits = Bitstring.bitstring_of_file training_images_filename in
   let data_type, num_dims, rest = read_magic_number bits in
   let num_images, num_rows, num_cols, rest = read_images_header rest in
-  num_images, num_rows, num_cols
+  let images = read_images rest (Int32.to_int num_images) in
+  num_images, num_rows, num_cols, images
 ;;
 
+#require "graphics";;
+open Graphics;;
 
+let display_image pixmap = (* pixels is a rectangular list list int (pixel density) *)
+
+  let get_color d = rgb d d d in
+
+  let colorize pixmap =
+    List.map (List.map get_color) pixmap in
   
-  data_type, num_dims (* dim_sizes *)
-  (* read_images rest*)
+  let ll_to_aa ll = Array.of_list (List.map Array.of_list ll) in
+
+  let create_window =
+    begin
+      Graphics.open_graph " 28x28";
+      Graphics.set_window_title "some label";
+    end
+  in
+
+  let () = create_window in
+  
+  let image = Graphics.make_image (ll_to_aa (colorize pixmap)) in
+  Graphics.draw_image image 0 0;
+      
+  (* then Graphics.close_graph *)
 ;;
 
 

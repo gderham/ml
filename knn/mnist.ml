@@ -10,8 +10,8 @@ open Bitstring;;
    (see http://yann.lecun.com/exdb/mnist/)
 *)
 
-let pixmap_width, pixmap_height = 28,28;;
-let pixmap_num_pixels = pixmap_width * pixmap_height;;
+let pixmap_width, pixmap_height = 28,28
+let pixmap_num_pixels = pixmap_width * pixmap_height
 
 let read_labels_header pkt =
   bitmatch pkt with

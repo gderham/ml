@@ -9,7 +9,7 @@ let ll_to_aa ll = Array.of_list (List.map Array.of_list ll)
 (* Convert a 1 x w list to a m x n matrix where m * n = w *)
 let list_to_matrix list num_cols =
   if List.length list mod num_cols <> 0 then
-    failwith "num_cols must divide the size of list."
+    invalid_arg "num_cols must divide the size of list."
   else 
     let rec aux acc_matrix curr_row i = function
       | [] -> acc_matrix

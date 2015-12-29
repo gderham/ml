@@ -1,14 +1,12 @@
+(* MNIST handwritten digit database file parsing (see http://yann.lecun.com/exdb/mnist/) *)
+
 (*
 #camlp4o;;
 #require "bitstring";;                                                                         
 #require "bitstring.syntax";;
 *)
+
 open Bitstring;;
-
-(* MNIST handwritten digit database file parsing
-
-   (see http://yann.lecun.com/exdb/mnist/)
-*)
 
 let pixmap_width, pixmap_height = 28,28
 let pixmap_num_pixels = pixmap_width * pixmap_height

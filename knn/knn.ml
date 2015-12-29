@@ -11,9 +11,19 @@
 
    ocamlfind ocamlc -linkpkg -thread -syntax camlp4o -package bitstring.syntax -package bitstring,graphics matrix.ml mnist.ml display.ml knn.ml
 
+  3. To run in toplevel:
+
+   #camlp4o;; 
+   #require "bitstring.syntax";; x 2
+   #require "graphics";;
+
+   #mod_use "matrix.ml";;
+   #mod_use "display.ml";;
+   #mod_use "mnist.ml";;
+   #mod_use "knn.ml";;
+
 *)
 
-open Display
 open Mnist
 
 let base_dir = "/Users/guy/repos/ml/mnist/"
@@ -31,7 +41,8 @@ let get_test_images = get_images test_images_filename
 (* Display one of the digits from the database *)
 let () =
   let _, training_images = get_training_images in
-  List.nth training_images 10 |> display_image
+  List.nth training_images 10 |> Display.display_image
+
 
 (*
 2. Split into training and test data

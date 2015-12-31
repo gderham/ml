@@ -52,6 +52,9 @@ let rec apply f (ll : int list list) =
 
 let id x = x;;
 
+(* Apply a function to each element of a matrix (list list) *)
+let apply_matrix f = apply (fun l -> List.map l f);;
+
 let transpose = apply id;;
 
 let multiply m1 m2 =
@@ -63,15 +66,11 @@ let multiply m1 m2 =
     )
 ;;
 
-let m_sq m = (* squares each element of a matrix *)
-  let sq list = List.map list (fun elm -> elm * elm) in
-  List.map m (fun row -> sq row)
-;;
+let m_sq = apply_matrix (fun x -> x * x);;
 
 let m_sum m = (* generate a vector of the row sums of a matrix *)
-  List.map m (fun row -> List.fold row ~init:0 ~f:(fun acc elm -> acc + elm))
+  List.map m (fun row -> List.fold row ~init:0 ~f:(+))
 ;;
-
 
 
 (* Display one of the digits from the database *)

@@ -80,8 +80,7 @@ let read_images bits num_images =
     else
       let pixmap, rest = read_image bits in
       let row = parse_pixmap_into_list pixmap in
-      let matrix = Matrix.list_to_matrix row pixmap_width in
-      loop (matrix :: acc_images) (num_images-1) rest in
+      loop (row :: acc_images) (num_images-1) rest in
   List.rev (loop [] num_images bits)
 
 let get_labels filename = 
@@ -95,3 +94,8 @@ let get_images filename =
   let num_images, num_rows, num_cols, rest = read_images_header rest in
   let images = read_images rest (Int32.to_int num_images) in
   num_images, images
+
+let get_image_matrices filename =
+  let num_images, images = get_images filename in
+  let image_matrices = List.map (fun i -> Matrix.list_to_matrix i pixmap_width) images in
+  num_images, image_matrices

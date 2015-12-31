@@ -84,13 +84,14 @@ let bsx_add v1 v2 = bsx v1 v2 (+);;
 let matrixify v =
   List.map v (fun r -> [r]);;
 
-let sos m = m |> m_sq |> m_sum;;
-
 let m_sq = apply_matrix (fun x -> x * x);;
 
 let m_sum m = (* generate a vector of the row sums of a matrix *)
   List.map m (fun row -> List.fold row ~init:0 ~f:(+))
 ;;
+
+let sos m = m |> m_sq |> m_sum;;
+
 
 let squared_euclidean_distance p q =
   add
@@ -109,6 +110,8 @@ let min_index m = (* TODO: rewrite with folding *)
   List.map m (fun row -> find_min 99999 (-1) 0 row)
 ;;    
 
+
+
 (* Display one of the digits from the database *)
 let () =
   let _, training_images = get_training_images in
@@ -116,17 +119,24 @@ let () =
   List.nth training_images 10 |> Display.display_image
     ;;
 
+
+
 (* Simple test data. *)
 let test_labels = ['d';'b'];;
 let test_digits = [[0;0;0;4];[0;2;0;0]];;
 let train_labels = ['d';'b';'a';'c'];;
 let train_digits = [[0;0;0;5];[0;3;0;0];[1;0;0;0];[0;0;7;0]];;
 
+let train_size = 100;;
+let test_size  = 2;;
 
 let _,train_digits = get_training_images;;
-let train_labels = get_training_labels;;
+let train_digits = List.slice train_digits 0 train_size;;
+let train_labels = List.slice get_training_labels 0 train_size;;
+
 let _,test_digits  = get_test_images;;
-let test_labels  = get_test_labels;;
+let test_digits = List.slice test_digits 0 test_size;;
+let test_labels = List.slice get_test_labels 0 test_size;;
 
 (* Find the distance from all test digits to all training digits. *)
 let d = squared_euclidean_distance test_digits train_digits;;

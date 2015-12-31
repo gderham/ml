@@ -53,7 +53,7 @@ let rec apply f (ll : int list list) =
 let id x = x;;
 
 (* Apply a function to each element of a matrix (list list) *)
-let apply_matrix f = apply (fun l -> List.map l f);;
+let apply_matrix f m = List.map m (fun row -> (List.map row (fun x -> f x)));;
 
 let transpose = apply id;;
 
@@ -66,12 +66,39 @@ let multiply m1 m2 =
     )
 ;;
 
+let scale s = apply_matrix (fun x -> s * x);;
+
+(* Add two matrices of the same size *)
+let add m1 m2 =
+  List.map2_exn m1 m2 (fun a b -> List.map2_exn a b (+))
+;;
+
+(* Add two matrices of size 1xn and mx1 -> n x m *) 
+let bsx m1 m2 =
+  let unwrap = function
+    | [x] -> x
+    | _ -> failwith "Matrices must be of size 1xn and mx1." in
+  List.map m1 (fun a -> List.map (unwrap m2) (fun b -> unwrap(a)+b))
+;;
+  
+
+(* convert vector into matrix *)
+let matrixify v =
+  List.map v (fun r -> [r]);;
+
+let sos m = m |> m_sq |> m_sum |> matrixify;;
+
 let m_sq = apply_matrix (fun x -> x * x);;
 
 let m_sum m = (* generate a vector of the row sums of a matrix *)
   List.map m (fun row -> List.fold row ~init:0 ~f:(+))
 ;;
 
+let squared_euclidean_distance p q =
+  add
+    (multiply (sos p) (transpose (sos q)))
+    (scale (-2) (multiply p (transpose q)))
+;;
 
 (* Display one of the digits from the database *)
 let () =
@@ -90,10 +117,8 @@ let d_tr = [[0;0;0;5];[0;3;0;0];[1;0;0;0]] in
 
 (* compute sum of squares *)
 
-let sos m = m_sum (m_sq m) in 
-
-let d_tr_sos = sos d_tr in
-let d_te_sos = sos d_te in
+let d_train_sos = sos d_tr in
+let d_test_sos = sos d_te in
 
 
 d_tr_sos, m_transpose [d_te_sos];;

@@ -40,21 +40,19 @@ let get_training_images = get_images training_images_filename
 let get_test_labels = get_labels test_labels_filename
 let get_test_images = get_images test_images_filename
 
-let rec m_transpose = function
-  | [] -> []
-  | [] :: rows -> m_transpose rows
-  | (h::t) :: rows -> (h::List.map rows List.hd_exn) :: m_transpose (t :: List.map rows List.tl_exn)
-;;
-
 (* Hadamard product for two vectors *)
 let componentwise_product v1 v2 = List.map2_exn v1 v2 ( * );;
 
 let rec apply f (ll : int list list) =
-  if List.mem ll [] then
-    []
-  else
-    f (List.map ll List.hd_exn) :: apply f (List.map ll List.tl_exn)
+  match ll with
+  | [] -> []
+  | ll when List.mem ll [] -> []
+  | ll -> f (List.map ll List.hd_exn) :: apply f (List.map ll List.tl_exn)
 ;;
+
+let id x = x;;
+
+let transpose = apply id;;
 
 let multiply m1 m2 =
   (* Transpose m2's rows and multiply with the rows of m1. *) 

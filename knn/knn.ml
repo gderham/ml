@@ -25,6 +25,8 @@
 *)
 
 open Mnist
+open Core.Std
+
 
 let base_dir = "/Users/guy/repos/ml/mnist/"
 
@@ -38,6 +40,39 @@ let get_training_images = get_images training_images_filename
 let get_test_labels = get_labels test_labels_filename
 let get_test_images = get_images test_images_filename
 
+let rec m_transpose = function
+  | [] -> []
+  | [] :: rows -> m_transpose rows
+  | (h::t) :: rows -> (h::List.map rows List.hd_exn) :: m_transpose (t :: List.map rows List.tl_exn)
+;;
+
+(* Hadamard product for two vectors *)
+let componentwise_product v1 v2 = List.map2_exn v1 v2 ( * );;
+
+let rec apply f (ll : int list list) =
+  if List.mem ll [] then
+    []
+  else
+    f (List.map ll List.hd_exn) :: apply f (List.map ll List.tl_exn)
+;;
+
+let multiply m1 m2 =
+  (* Transpose m2's rows and multiply with the rows of m1. *) 
+  List.map m1 (fun row ->
+      apply
+        (fun col -> List.fold_left (componentwise_product row col) ~init:0 ~f:(+))
+        m2
+    )
+;;
+
+let m_sq m = (* squares each element of a matrix *)
+  let sq list = List.map list (fun elm -> elm * elm) in
+  List.map m (fun row -> sq row)
+;;
+
+let m_sum m = (* generate a vector of the row sums of a matrix *)
+  List.map m (fun row -> List.fold row ~init:0 ~f:(fun acc elm -> acc + elm))
+;;
 
 
 
@@ -49,47 +84,28 @@ let () =
 ;;
 
 
-  open Core.Std;;
+(* choose a single test digit *)
+let d_te = [[0;0;0;4];[0;2;0;0]] in
 
-  (* choose a single test digit *)
-  let d_te = [[0;0;0;4];[0;2;0;0]] in
+(* compute euclidean distance to all the training digits *)
 
-  (* compute euclidean distance to all the training digits *)
+let d_tr = [[0;0;0;5];[0;3;0;0];[1;0;0;0]] in
 
-  let d_tr = [[0;0;0;5];[0;3;0;0];[1;0;0;0]] in
- 
-  (* compute sum of squares *)
+(* compute sum of squares *)
 
-  let m_sq m = (* squares each element of a matrix *)
-    let sq list = List.map list (fun elm -> elm * elm) in
-    List.map m (fun row -> sq row) in
+let sos m = m_sum (m_sq m) in 
 
-  let m_sum m = (* generate a vector of the row sums of a matrix *)
-    List.map m (fun row -> List.fold row ~init:0 ~f:(fun acc elm -> acc + elm)) in
-    (* or implement matrix mult with a vector of ones *)
-
-  let sos m = m_sum (m_sq m) in 
-
-  let d_tr_sos = sos d_tr in
-  let d_te_sos = sos d_te in
-
-  let rec m_transpose = function
-    | [] -> []
-    | [] :: rows -> m_transpose rows
-    | (h::t) :: rows -> (h::List.map rows List.hd_exn) :: m_transpose (t :: List.map rows List.tl_exn) in
-
-  (* unlikely to work for 10k+ size matrices? *) 
-
-  (*let m_mult a b =*)
-  
-
-  d_tr_sos, m_transpose [d_te_sos];;
-  
-  (* find the min distance *)
+let d_tr_sos = sos d_tr in
+let d_te_sos = sos d_te in
 
 
-  (* find the corresponding label *)
-  
+d_tr_sos, m_transpose [d_te_sos];;
+
+(* find the min distance *)
+
+
+(* find the corresponding label *)
+
 
 
 

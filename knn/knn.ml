@@ -73,20 +73,18 @@ let add m1 m2 =
   List.map2_exn m1 m2 (fun a b -> List.map2_exn a b (+))
 ;;
 
-(* Add two matrices of size 1xn and mx1 -> n x m *) 
-let bsx m1 m2 =
-  let unwrap = function
-    | [x] -> x
-    | _ -> failwith "Matrices must be of size 1xn and mx1." in
-  List.map m1 (fun a -> List.map (unwrap m2) (fun b -> unwrap(a)+b))
+(* Combining two vectors of size 1xn and mx1 -> n x m matrix. *) 
+let bsx v1 v2 f =
+  List.map v1 (fun a -> List.map v2 (fun b -> f a b))
 ;;
-  
+
+let bsx_add v1 v2 = bsx v1 v2 (+);;
 
 (* convert vector into matrix *)
 let matrixify v =
   List.map v (fun r -> [r]);;
 
-let sos m = m |> m_sq |> m_sum |> matrixify;;
+let sos m = m |> m_sq |> m_sum;;
 
 let m_sq = apply_matrix (fun x -> x * x);;
 
@@ -96,7 +94,7 @@ let m_sum m = (* generate a vector of the row sums of a matrix *)
 
 let squared_euclidean_distance p q =
   add
-    (multiply (sos p) (transpose (sos q)))
+    (bsx_add (sos p) (sos q))
     (scale (-2) (multiply p (transpose q)))
 ;;
 

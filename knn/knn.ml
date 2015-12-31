@@ -98,43 +98,44 @@ let squared_euclidean_distance p q =
     (scale (-2) (multiply p (transpose q)))
 ;;
 
+(* For an nxm matrix, find the minimum element of each row, and return a corresponding 2xm matrix of min,index of min *)
+(* The index starts at 0. *)
+let min_index m = (* TODO: rewrite with folding *)
+  let rec find_min min min_indx curr_indx = function
+    | [] -> (min,min_indx)
+    | h :: t -> if h < min
+          then find_min h   curr_indx (curr_indx+1) t
+          else find_min min min_indx  (curr_indx+1) t in
+  List.map m (fun row -> find_min 99999 (-1) 0 row)
+;;    
+
 (* Display one of the digits from the database *)
 let () =
-  let _, training_images = Knn.get_training_images in
+  let _, training_images = get_training_images in
  
   List.nth training_images 10 |> Display.display_image
-;;
+    ;;
+
+(* Simple test data. *)
+let test_labels = ['d';'b'];;
+let test_digits = [[0;0;0;4];[0;2;0;0]];;
+let train_labels = ['d';'b';'a';'c'];;
+let train_digits = [[0;0;0;5];[0;3;0;0];[1;0;0;0];[0;0;7;0]];;
 
 
-(* choose a single test digit *)
-let d_te = [[0;0;0;4];[0;2;0;0]] in
+let _,train_digits = get_training_images;;
+let train_labels = get_training_labels;;
+let _,test_digits  = get_test_images;;
+let test_labels  = get_test_labels;;
 
-(* compute euclidean distance to all the training digits *)
+(* Find the distance from all test digits to all training digits. *)
+let d = squared_euclidean_distance test_digits train_digits;;
 
-let d_tr = [[0;0;0;5];[0;3;0;0];[1;0;0;0]] in
+(* For each test digit find the closest training digit. *)
+let mins = min_index d;;
 
-(* compute sum of squares *)
+(* Look up the labels for the closest training digit. *)
+let predicted_test_labels = List.map mins (fun (m,i) -> List.nth_exn train_labels i);; 
 
-let d_train_sos = sos d_tr in
-let d_test_sos = sos d_te in
-
-
-d_tr_sos, m_transpose [d_te_sos];;
-
-(* find the min distance *)
-
-
-(* find the corresponding label *)
-
-
-
-
-(*
-2. Split into training and test data
-3. For each test digit, compute the euclidean distance to all digits in the training set
-4. For K=1, use pick the closest digit
-5. Compute the misclassification rate on the test set.
-6. Try various preprocessing and see how this affects the misclassification rate.
-
-*)
+let success = test_labels = predicted_test_labels;;
 

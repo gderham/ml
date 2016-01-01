@@ -13,7 +13,7 @@
 
    ocamlfind ocamlc -linkpkg -thread -syntax camlp4o -package bitstring.syntax -package bitstring,core,graphics matrix.ml mnist.ml display.ml knn.ml
 
-   3. To run in toplevel:
+  3. To run in toplevel:
 
    #camlp4o;; 
    #require "bitstring.syntax";; x 2

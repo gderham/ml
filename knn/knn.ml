@@ -7,11 +7,13 @@
    http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
    http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
 
+   and set base_dir (below) to the save directory.
+
   2. To compile:
 
    ocamlfind ocamlc -linkpkg -thread -syntax camlp4o -package bitstring.syntax -package bitstring,core,graphics matrix.ml mnist.ml display.ml knn.ml
 
-  3. To run in toplevel:
+   3. To run in toplevel:
 
    #camlp4o;; 
    #require "bitstring.syntax";; x 2
@@ -24,12 +26,12 @@
 
 *)
 
+open Core.Std
 open Matrix
 open Mnist
-open Core.Std
 open Printf
 
-(* Find the squared Euclidean distance between two sets of points in r dimensions..
+(* Find the squared Euclidean distance between two sets of points in r dimensions.
    p is a mxr matrix of m points in r dimensional space.
    q is a nxr matrix of n points in r dimensional space.
    The result is an mxn matrix of the squared distances from the m points to the n points.
@@ -39,9 +41,7 @@ let squared_euclidean_distance p q =
     (bsx_add (sos p) (sos q))
     (scale (-2) (multiply p (transpose q)))
 
-(* For an nxm matrix, find the minimum element of each row, and return a
-   corresponding 2xm matrix of (index,val). The index starts at 0.
-*)
+(* Find a list's minimum value and its zero based index. *)
 let find_min_index_val list =
   if list = [] then
     failwith "Cannot find minimum value of empty list."
@@ -53,8 +53,14 @@ let find_min_index_val list =
       | _ -> idx_min in
     List.foldi list ~f:find_min ~init:(-1,0)
 
+(* For an nxm matrix, find the minimum value of each row (the closest digit), and
+   return a corresponding 2xm matrix of (index,value). The index starts at 0.
+*)
 let min_index m = List.map m (fun row -> find_min_index_val row)
 
+(* Compare two lists (of the same length) and return the number of structurally
+   mismatching elements.
+*)
 let count_mismatches al bl =
   List.fold2_exn al bl ~init:0 ~f:(fun misses a b -> if a <> b then misses+1 else misses)
 
@@ -75,8 +81,9 @@ let get_test_images = get_images test_images_filename
 let () =
 
   printf "Running 1NN classification of MNIST handwritten digits.\n%!";
-  
-  let train_size = 5000 in
+
+  (* Takes about 40s on my MBP. *)
+  let train_size = 5000 in 
   let test_size  = 20 in
 
   printf "Training set size = %d\n%!" train_size;
@@ -94,13 +101,13 @@ let () =
 
   printf "Computing predicted test digits..\n%!";
   (* Find the distance from all test digits to all training digits. *)
-  let d = squared_euclidean_distance test_digits train_digits in
+  let squared_distances = squared_euclidean_distance test_digits train_digits in
 
   (* For each test digit find the closest training digit. *)
-  let mins = min_index d in
+  let closest_digits = min_index squared_distances in
 
   (* Look up the labels for the closest training digit. *)
-  let predicted_test_labels = List.map mins (fun (idx,min_dist) -> List.nth_exn train_labels idx) in
+  let predicted_test_labels = List.map closest_digits (fun (idx,min_dist) -> List.nth_exn train_labels idx) in
 
   let num_misses = count_mismatches test_labels predicted_test_labels in
 
